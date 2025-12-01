@@ -1,0 +1,7 @@
+{
+    "files.encoding": "gbk",
+    "files.autoGuessEncoding": true,
+    "files.candidateGuessEncodings": [
+        "gb2312"
+    ]
+}

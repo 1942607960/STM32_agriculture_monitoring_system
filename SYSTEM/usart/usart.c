@@ -203,11 +203,11 @@ void Uart1_SendStr(char*SendBuf)//串口1打印数据
 
 void Uart2_SendStr(char*SendBuf)//串口2打印数据
 {
-	while(*SendBuf)
-	{	
-        while((USART2->SR&0X40)==0);//等待发送完成 
-        USART2->DR = (u8) *SendBuf; 
-        SendBuf++;
+	while(*SendBuf)//*SendBuf解引用，取指针指向的字符，字符串是以空字符 '\0'（ASCII 码值为 0）作为结束标志的。
+	{	//当*SendBuf为0时，即发送一个字节完毕
+        while((USART2->SR&0X40)==0);//等待发送完成，SR 寄存器的TXE位（发送数据寄存器空标志位），这里不是已发送，而是空状态
+        USART2->DR = (u8) *SendBuf; //把要发送的数据放到数据寄存器
+        SendBuf++;//一个字符就有一个字节，因为字符是8位ASCII 码
 	}
 }
 

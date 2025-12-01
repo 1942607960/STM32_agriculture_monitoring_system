@@ -1,8 +1,6 @@
 #include "BC26.h"
 #include "string.h"
 //AT+NSOCL=0
-#include "BC26.h"
-#include "string.h"
 #include "led.h"
 #include "relay.h"
 char *strx,*extstrx;
@@ -35,7 +33,7 @@ int BC26_Init(void)
     delay_ms(3000);
     printf(buf_uart2.buf);      //打印收到的串口信息
     printf("get back BC26\r\n");
-    strx=strstr((const char*)buf_uart2.buf,(const char*)"OK");//返回OK
+    strx=strstr((const char*)buf_uart2.buf,(const char*)"OK");//返回OK const是原函数参数的要求
     while(strx==NULL)
     {
         printf("\r\n单片机正在连接到模块...\r\n");
@@ -45,12 +43,11 @@ int BC26_Init(void)
         strx=strstr((const char*)buf_uart2.buf,(const char*)"OK");//返回OK
     }
 	
-	Uart2_SendStr("AT+QCCID\r\n");//Disconnect a client from MQTT server
+	Uart2_SendStr("AT+QCCID\r\n");//查询SIM卡的QCCID
     delay_ms(300);
 	
     Clear_Buffer();	
-    Uart2_SendStr("AT+CIMI\r\n");//获取卡号，类似是否存在卡的意思，比较重要。
-    delay_ms(300);
+    Uart2_SendStr("AT+CIMI\r\n");//获取IMSI 国际移动用户识别码
     strx=strstr((const char*)buf_uart2.buf,(const char*)"ERROR");//只要卡不错误 基本就成功
     if(strx==NULL)
     {
@@ -67,7 +64,7 @@ int BC26_Init(void)
     }
 	
 	Clear_Buffer();
-    Uart2_SendStr("AT+CGSN=1\r\n");//得到IMEI
+    Uart2_SendStr("AT+CGSN=1\r\n");//得到IMEI 国际移动设备识别码
     delay_ms(300);
     strx=strstr((const char*)buf_uart2.buf,(const char*)"OK");//返OK	
     if(strx)
@@ -77,9 +74,9 @@ int BC26_Init(void)
     }
 	
 	Clear_Buffer();	
-    Uart2_SendStr("AT+CGATT?\r\n");//查询激活状态
+    Uart2_SendStr("AT+CGATT?\r\n");//查询附网状态 查询当前模块是否附着到GPRS网络
     delay_ms(300);
-    strx=strstr((const char*)buf_uart2.buf,(const char*)"+CGATT: 1");//返1 表明激活成功 获取到IP地址了
+    strx=strstr((const char*)buf_uart2.buf,(const char*)"+CGATT: 1");//返1 表示已附着 返0未附着
     errcount = 0;
     while(strx==NULL)
     {
@@ -97,7 +94,7 @@ int BC26_Init(void)
     }
 //	return err;
 	Clear_Buffer();
-    Uart2_SendStr("AT+QBAND?\r\n"); //允许错误值
+    Uart2_SendStr("AT+QBAND?\r\n"); //允许错误值 会返回当前工作频段的相关信息 3联通 5电信 8移动
     delay_ms(300);
     strx=strstr((const char*)buf_uart2.buf,(const char*)"OK");//返回OK
     if(strx)
@@ -107,19 +104,19 @@ int BC26_Init(void)
     }
 	
 	Clear_Buffer();
-    Uart2_SendStr("AT+CSQ\r\n");//查看获取CSQ值
+    Uart2_SendStr("AT+CSQ\r\n");//查询当前网络信号强度
     delay_ms(300);
     strx=strstr((const char*)buf_uart2.buf,(const char*)"+CSQ");//返回CSQ
 	if(strx)
     {
-        printf("信号质量:%s\r\n",buf_uart2.buf);
+        printf("信号质量:%s\r\n",buf_uart2.buf);//范围：0-31，0表示信号极弱，31表示信号最强；若为99，则表示信号无法检测，比如无SIM卡、无网络
        
         delay_ms(300);
     }
 	
 	
 	Clear_Buffer();
-    Uart2_SendStr("AT+CEREG?\r\n");
+    Uart2_SendStr("AT+CEREG?\r\n");//查询EPS网络注册状态
     delay_ms(300);
     strx=strstr((const char*)buf_uart2.buf,(const char*)"+CEREG: 0,1");//返回注册状态
     extstrx=strstr((const char*)buf_uart2.buf,(const char*)"+CEREG: 1,1");//返回注册状态
